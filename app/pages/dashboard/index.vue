@@ -1,4 +1,4 @@
-<!-- 首页数据大屏 - 深色背景 + 高对比度数据展示 -->
+<!-- 首页数据大屏 - 浅色背景 + 高对比度数据展示 -->
 <template>
   <div class="dashboard">
     <!-- KPI 指标卡片行 -->
@@ -168,15 +168,15 @@ const statusChartOption = computed(() => {
 
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'item', backgroundColor: '#333', borderColor: '#555', textStyle: { color: '#fff' } },
+    tooltip: { trigger: 'item', backgroundColor: '#fff', borderColor: '#E4E7ED', textStyle: { color: '#303133' } },
     series: [{
       type: 'pie',
       radius: ['45%', '70%'],
       center: ['50%', '50%'],
       avoidLabelOverlap: false,
-      itemStyle: { borderRadius: 6, borderColor: '#2a2a2a', borderWidth: 2 },
-      label: { show: true, color: '#999', fontSize: 12 },
-      labelLine: { lineStyle: { color: '#555' } },
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, color: '#606266', fontSize: 12 },
+      labelLine: { lineStyle: { color: '#C0C4CC' } },
       data: [
         { value: pending, name: '待加工', itemStyle: { color: '#E6A23C' } },
         { value: processing, name: '加工中', itemStyle: { color: '#409EFF' } },
@@ -204,20 +204,20 @@ const trendChartOption = computed(() => {
 
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', backgroundColor: '#333', borderColor: '#555', textStyle: { color: '#fff' } },
-    legend: { data: ['新建工单', '完成工单'], textStyle: { color: '#999' }, top: 0 },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#E4E7ED', textStyle: { color: '#303133' } },
+    legend: { data: ['新建工单', '完成工单'], textStyle: { color: '#606266' }, top: 0 },
     grid: { left: '3%', right: '4%', bottom: '3%', top: 36, containLabel: true },
     xAxis: {
       type: 'category',
       data: days,
-      axisLine: { lineStyle: { color: '#444' } },
-      axisLabel: { color: '#888' }
+      axisLine: { lineStyle: { color: '#DCDFE6' } },
+      axisLabel: { color: '#909399' }
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#333' } },
-      axisLabel: { color: '#888' }
+      splitLine: { lineStyle: { color: '#EBEEF5' } },
+      axisLabel: { color: '#909399' }
     },
     series: [
       {
@@ -261,19 +261,19 @@ const productRankOption = computed(() => {
 
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', backgroundColor: '#333', borderColor: '#555', textStyle: { color: '#fff' } },
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderColor: '#E4E7ED', textStyle: { color: '#303133' } },
     grid: { left: '3%', right: '8%', bottom: '3%', top: 8, containLabel: true },
     xAxis: {
       type: 'value',
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#333' } },
-      axisLabel: { color: '#888' }
+      splitLine: { lineStyle: { color: '#EBEEF5' } },
+      axisLabel: { color: '#909399' }
     },
     yAxis: {
       type: 'category',
       data: top5.map(t => t.name),
-      axisLine: { lineStyle: { color: '#444' } },
-      axisLabel: { color: '#ccc', fontSize: 12 }
+      axisLine: { lineStyle: { color: '#DCDFE6' } },
+      axisLabel: { color: '#606266', fontSize: 12 }
     },
     series: [{
       type: 'bar',
@@ -327,13 +327,13 @@ const productRankOption = computed(() => {
   .kpi-value {
     font-size: 28px;
     font-weight: 700;
-    color: #fff;
+    color: $text-primary;
     line-height: 1.2;
   }
 
   .kpi-label {
     font-size: 13px;
-    color: #999;
+    color: $text-secondary;
     margin-top: 2px;
   }
 }
@@ -386,13 +386,13 @@ const productRankOption = computed(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.02);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -412,13 +412,13 @@ const productRankOption = computed(() => {
 
   .order-no {
     font-size: 13px;
-    color: #E0E0E0;
+    color: $text-regular;
     font-weight: 500;
   }
 
   .order-assignee {
     font-size: 12px;
-    color: #777;
+    color: $text-secondary;
   }
 }
 
@@ -429,7 +429,7 @@ const productRankOption = computed(() => {
   height: 200px;
 
   .empty-text {
-    color: #666;
+    color: $text-secondary;
     font-size: 13px;
   }
 }
