@@ -3,6 +3,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: false },
 
+  // 指定源码目录为 app/，使 Nuxt 正确解析 ~ 和 @ 别名
+  srcDir: 'app/',
+
   app: {
     head: {
       title: '博信达云工单',
@@ -26,21 +29,21 @@ export default defineNuxtConfig({
   },
 
   css: [
-    '~/assets/styles/index.scss',
-    'element-plus/theme-chalk/dark/css-vars.css'
+    '~/assets/styles/index.scss'
   ],
 
   vite: {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@use "~/assets/styles/variables.scss" as *;`
+          // 全局注入变量文件，使所有组件可直接使用 $sidebar-bg 等变量
+          additionalData: `@use "~/assets/styles/variables.scss" as *;\n`,
+          api: 'modern-compiler'
         }
       }
     }
   },
 
-  // 路由守卫中间件全局注册
   runtimeConfig: {
     public: {
       appName: '博信达云工单'
