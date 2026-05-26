@@ -1,6 +1,9 @@
 // Dexie.js 数据库定义与初始化
 // 使用 IndexedDB 模拟全量数据库，支持图片 Blob 存储
 // 所有数据操作均在客户端完成，实现零延迟本地 ERP 体验
+//
+// 重要：此文件会被 SSR 服务端导入，因此数据库实例化必须延迟到客户端执行
+// 类型定义可以安全地在服务端使用
 
 import Dexie, { type Table } from 'dexie'
 
@@ -77,6 +80,7 @@ class ErpDatabase extends Dexie {
     // 数据库首次创建时注入种子数据
     this.on('populate', (transaction) => {
       const now = Date.now()
+      // 日期格式化辅助函数，用于生成工单编号中的日期部分
       const dateStr = (d: Date) => {
         const y = d.getFullYear()
         const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -85,7 +89,7 @@ class ErpDatabase extends Dexie {
       }
       const today = new Date()
 
-      // 注入默认用户
+      // 注入默认用户（admin + operator 两级角色）
       const usersTable = transaction.table('users')
       usersTable.bulkAdd([
         {
@@ -104,7 +108,7 @@ class ErpDatabase extends Dexie {
         }
       ])
 
-      // 注入示例产品
+      // 注入示例产品（覆盖轴承、齿轮、密封件、电路板、铝合金等典型制造品类）
       const productsTable = transaction.table('products')
       productsTable.bulkAdd([
         { code: 'P-001', name: '精密轴承', spec: '6205-2RS', remark: '标准深沟球轴承', createdAt: now, updatedAt: now },
@@ -114,7 +118,7 @@ class ErpDatabase extends Dexie {
         { code: 'P-005', name: '铝合金外壳', spec: 'AL-6061-T6', remark: '航空级铝合金', createdAt: now, updatedAt: now }
       ])
 
-      // 注入示例工单
+      // 注入示例工单（模拟不同状态：待加工/加工中/已完成）
       const workOrdersTable = transaction.table('workOrders')
       workOrdersTable.bulkAdd([
         {
@@ -173,5 +177,27 @@ class ErpDatabase extends Dexie {
   }
 }
 
-// 数据库单例，全局共享
-export const db = new ErpDatabase()
+// ==================== 数据库单例 ====================
+// 使用懒初始化模式，仅在客户端首次访问时创建实例
+// 避免在 SSR 服务端执行时访问 IndexedDB 导致报错
+
+let _db: ErpDatabase | null = null
+
+/** 获取数据库实例（仅客户端可用） */
+export const getDb = (): ErpDatabase => {
+  if (!_db) {
+    if (!import.meta.client) {
+      throw new Error('IndexedDB is not available in server-side rendering')
+    }
+    _db = new ErpDatabase()
+  }
+  return _db
+}
+
+// 为了向后兼容，导出 db 作为懒加载代理
+// 在组件中使用时，确保只在 onMounted 或客户端逻辑中访问
+export const db = new Proxy({} as ErpDatabase, {
+  get(_target, prop) {
+    return Reflect.get(getDb(), prop)
+  }
+})

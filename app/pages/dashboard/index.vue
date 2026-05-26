@@ -24,7 +24,9 @@
       <div class="chart-card">
         <h3 class="chart-title">工单状态分布</h3>
         <div class="chart-container">
-          <v-chart :option="statusChartOption" autoresize />
+          <ClientOnly>
+            <v-chart :option="statusChartOption" autoresize />
+          </ClientOnly>
         </div>
       </div>
 
@@ -32,7 +34,9 @@
       <div class="chart-card chart-card-wide">
         <h3 class="chart-title">近7日工单完成趋势</h3>
         <div class="chart-container">
-          <v-chart :option="trendChartOption" autoresize />
+          <ClientOnly>
+            <v-chart :option="trendChartOption" autoresize />
+          </ClientOnly>
         </div>
       </div>
     </div>
@@ -42,7 +46,9 @@
       <div class="chart-card chart-card-wide">
         <h3 class="chart-title">产品热度 TOP 5</h3>
         <div class="chart-container">
-          <v-chart :option="productRankOption" autoresize />
+          <ClientOnly>
+            <v-chart :option="productRankOption" autoresize />
+          </ClientOnly>
         </div>
       </div>
 

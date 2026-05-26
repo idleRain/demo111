@@ -1,4 +1,6 @@
 <!-- 应用入口 - Nuxt 页面路由容器 -->
 <template>
-  <NuxtPage />
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
