@@ -77,10 +77,9 @@ class ErpDatabase extends Dexie {
       operationLogs: '++id, workOrderId'
     })
 
-    // 数据库首次创建时注入种子数据
+    // 数据库首次创建时注入种子数据（图片在 open 后异步补充）
     this.on('populate', (transaction) => {
       const now = Date.now()
-      // 日期格式化辅助函数，用于生成工单编号中的日期部分
       const dateStr = (d: Date) => {
         const y = d.getFullYear()
         const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -89,26 +88,12 @@ class ErpDatabase extends Dexie {
       }
       const today = new Date()
 
-      // 注入默认用户（admin + operator 两级角色）
       const usersTable = transaction.table('users')
       usersTable.bulkAdd([
-        {
-          username: 'admin',
-          password: 'admin123',
-          role: 'admin',
-          name: '系统管理员',
-          createdAt: now
-        },
-        {
-          username: 'operator',
-          password: 'oper123',
-          role: 'operator',
-          name: '生产操作员',
-          createdAt: now
-        }
+        { username: 'admin', password: 'admin123', role: 'admin', name: '系统管理员', createdAt: now },
+        { username: 'operator', password: 'oper123', role: 'operator', name: '生产操作员', createdAt: now }
       ])
 
-      // 注入示例产品（覆盖轴承、齿轮、密封件、电路板、铝合金等典型制造品类）
       const productsTable = transaction.table('products')
       productsTable.bulkAdd([
         { code: 'P-001', name: '精密轴承', spec: '6205-2RS', remark: '标准深沟球轴承', createdAt: now, updatedAt: now },
@@ -118,62 +103,60 @@ class ErpDatabase extends Dexie {
         { code: 'P-005', name: '铝合金外壳', spec: 'AL-6061-T6', remark: '航空级铝合金', createdAt: now, updatedAt: now }
       ])
 
-      // 注入示例工单（模拟不同状态：待加工/加工中/已完成）
       const workOrdersTable = transaction.table('workOrders')
       workOrdersTable.bulkAdd([
         {
-          orderNo: `WO-${dateStr(today)}-0001`,
-          productId: 1,
-          quantity: 50,
-          status: 'processing',
-          assignee: '生产操作员',
-          remark: '加急订单，本周交付',
-          createdAt: now - 86400000,
-          updatedAt: now
+          orderNo: `WO-${dateStr(today)}-0001`, productId: 1, quantity: 50,
+          status: 'processing', assignee: '生产操作员', remark: '加急订单，本周交付',
+          createdAt: now - 86400000, updatedAt: now
         },
         {
-          orderNo: `WO-${dateStr(today)}-0002`,
-          productId: 2,
-          quantity: 100,
-          status: 'pending',
-          assignee: '生产操作员',
-          remark: '常规批量生产',
-          createdAt: now - 43200000,
-          updatedAt: now - 43200000
+          orderNo: `WO-${dateStr(today)}-0002`, productId: 2, quantity: 100,
+          status: 'pending', assignee: '生产操作员', remark: '常规批量生产',
+          createdAt: now - 43200000, updatedAt: now - 43200000
         },
         {
-          orderNo: `WO-${dateStr(today)}-0003`,
-          productId: 3,
-          quantity: 30,
-          status: 'completed',
-          assignee: '系统管理员',
-          remark: '已完工入库',
-          createdAt: now - 172800000,
-          updatedAt: now - 86400000,
-          completedAt: now - 86400000
+          orderNo: `WO-${dateStr(today)}-0003`, productId: 3, quantity: 30,
+          status: 'completed', assignee: '系统管理员', remark: '已完工入库',
+          createdAt: now - 172800000, updatedAt: now - 86400000, completedAt: now - 86400000
         },
         {
-          orderNo: `WO-${dateStr(today)}-0004`,
-          productId: 4,
-          quantity: 200,
-          status: 'processing',
-          assignee: '生产操作员',
-          remark: '电子客户订单',
-          createdAt: now - 3600000,
-          updatedAt: now
+          orderNo: `WO-${dateStr(today)}-0004`, productId: 4, quantity: 200,
+          status: 'processing', assignee: '生产操作员', remark: '电子客户订单',
+          createdAt: now - 3600000, updatedAt: now
         },
         {
-          orderNo: `WO-${dateStr(today)}-0005`,
-          productId: 5,
-          quantity: 80,
-          status: 'pending',
-          assignee: '系统管理员',
-          remark: '航空配件，需质检报告',
-          createdAt: now,
-          updatedAt: now
+          orderNo: `WO-${dateStr(today)}-0005`, productId: 5, quantity: 80,
+          status: 'pending', assignee: '系统管理员', remark: '航空配件，需质检报告',
+          createdAt: now, updatedAt: now
         }
       ])
     })
+  }
+
+  /** 为产品补充图片（需在数据库 open 之后异步调用） */
+  async initProductImages() {
+    const products = await this.products.toArray()
+    if (products.length > 0 && !products[0].image) {
+      // 通过 Vite 静态资源 import 获取图片 URL，再 fetch 为 Blob
+      const imageUrls = [
+        import('~/assets/images/P-001.png'),
+        import('~/assets/images/P-002.png'),
+        import('~/assets/images/P-003.png'),
+        import('~/assets/images/P-004.png'),
+        import('~/assets/images/P-005.png')
+      ]
+      const modules = await Promise.all(imageUrls)
+      const blobs = await Promise.all(
+        modules.map(async (mod) => {
+          const resp = await fetch(mod.default)
+          return await resp.blob()
+        })
+      )
+      await Promise.all(
+        products.map((p, i) => this.products.update(p.id!, { image: blobs[i] }))
+      )
+    }
   }
 }
 

@@ -3,9 +3,14 @@
 
 import { db } from '~/composables/database'
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin(async () => {
   // 数据库实例已在 database.ts 中通过模块级代码初始化
-  // 此插件确保 Nuxt 生命周期中正确加载数据库模块
+  // 异步补充产品图片（populate 事务内不能发网络请求）
+  try {
+    await db.initProductImages()
+  } catch (e) {
+    console.warn('产品图片加载失败:', e)
+  }
   return {
     provide: {
       db
