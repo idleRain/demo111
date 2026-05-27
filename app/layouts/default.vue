@@ -56,7 +56,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item disabled>
-                  <el-tag size="small" :type="currentUser?.role === 'admin' ? '' : 'info'">
+                  <el-tag size="small" :type="currentUser?.role === 'admin' ? undefined : 'info'">
                     {{ currentUser?.role === 'admin' ? '管理员' : '操作员' }}
                   </el-tag>
                 </el-dropdown-item>

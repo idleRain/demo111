@@ -107,9 +107,11 @@
         <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button text size="small" @click="navigateTo(`/work-orders/${row.id}`)">详情</el-button>
-            <el-button text size="small" type="primary" @click="handleStatusChange(row)">变更状态</el-button>
-            <el-button text size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <div style="display: flex; flex-wrap: nowrap;">
+              <el-button text size="small" @click="navigateTo(`/work-orders/${row.id}`)">详情</el-button>
+              <el-button text size="small" type="primary" @click="handleStatusChange(row)">变更状态</el-button>
+              <el-button text size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

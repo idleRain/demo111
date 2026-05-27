@@ -67,7 +67,7 @@
 
     <!-- 库存表格 -->
     <div class="bg-white rounded-lg shadow-card overflow-hidden">
-      <el-table :data="filteredList" style="width: 100%" :row-class-name="rowClassName">
+      <el-table ref="tableRef" :data="filteredList" style="width: 100%" :row-class-name="rowClassName">
         <el-table-column label="产品信息" min-width="200">
           <template #default="{ row }">
             <div class="flex items-center gap-3">
@@ -138,11 +138,12 @@
       </div>
     </div>
 
-    <!-- ==================== 录入/编辑库存对话框 ==================== -->
-    <el-dialog
+    <!-- ==================== 录入/编辑库存抽屉 ==================== -->
+    <el-drawer
       v-model="dialogVisible"
       :title="isEditing ? '编辑库存' : '录入库存'"
-      width="560px"
+      direction="rtl"
+      size="480px"
       :close-on-click-modal="false"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
@@ -207,7 +208,7 @@
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="saving" @click="handleSave">确定</el-button>
       </template>
-    </el-dialog>
+    </el-drawer>
 
     <!-- ==================== 库存调拨对话框 ==================== -->
     <el-dialog
@@ -242,8 +243,8 @@
       </template>
     </el-dialog>
 
-    <!-- ==================== 分类管理对话框 ==================== -->
-    <el-dialog v-model="showCategoryDialog" title="分类管理" width="600px">
+    <!-- ==================== 分类管理抽屉 ==================== -->
+    <el-drawer v-model="showCategoryDialog" title="分类管理" direction="rtl" size="520px">
       <div class="flex justify-between items-center mb-4">
         <span class="text-sm text-text-secondary">共 {{ categories.length }} 个分类</span>
         <el-button size="small" type="primary" @click="openCategoryForm(null)">
@@ -252,15 +253,15 @@
       </div>
 
       <el-table :data="categories" size="small">
-        <el-table-column prop="code" label="编码" width="100">
+        <el-table-column prop="code" label="编码" width="80">
           <template #default="{ row }">
             <span class="font-mono text-xs">{{ row.code }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="分类名称" width="140" />
-        <el-table-column prop="sort" label="排序" width="80" />
-        <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
-        <el-table-column label="操作" width="140">
+        <el-table-column prop="name" label="分类名称" width="120" />
+        <el-table-column prop="sort" label="排序" width="60" />
+        <el-table-column prop="remark" label="备注" min-width="100" show-overflow-tooltip />
+        <el-table-column label="操作" width="120">
           <template #default="{ row }">
             <el-button size="small" text type="primary" @click="openCategoryForm(row)">编辑</el-button>
             <el-button size="small" text type="danger" @click="handleDeleteCategory(row)">删除</el-button>
@@ -296,7 +297,7 @@
           </div>
         </el-form>
       </div>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
@@ -316,6 +317,7 @@ definePageMeta({
 
 // ==================== 数据加载 ====================
 
+const tableRef = ref()
 const inventories = ref<Inventory[]>([])
 const categories = ref<InventoryCategory[]>([])
 const productList = ref<Product[]>([])
@@ -337,7 +339,23 @@ const loadData = async () => {
   productImageUrls.value = urlMap
 }
 
-onMounted(() => loadData())
+onMounted(() => {
+  loadData()
+})
+
+// ElTable 在容器宽度变化时不会自动重算列宽，需手动 doLayout
+let resizeObserver: ResizeObserver | null = null
+onMounted(() => {
+  nextTick(() => {
+    if (tableRef.value?.$el?.parentElement) {
+      resizeObserver = new ResizeObserver(() => {
+        tableRef.value?.doLayout()
+      })
+      resizeObserver.observe(tableRef.value.$el.parentElement)
+    }
+  })
+})
+onUnmounted(() => resizeObserver?.disconnect())
 
 // ==================== 搜索与筛选 ====================
 

@@ -115,6 +115,16 @@ class ErpDatabase extends Dexie {
       inventories: '++id, productId, categoryId, warehouse, batchNo'
     })
 
+    // V3: 库存分类表新增 sort 索引（支持 orderBy('sort') 查询）
+    this.version(3).stores({
+      users: '++id, username, role',
+      products: '++id, code, name',
+      workOrders: '++id, orderNo, productId, status, assignee',
+      operationLogs: '++id, workOrderId',
+      inventoryCategories: '++id, code, name, parentId, sort',
+      inventories: '++id, productId, categoryId, warehouse, batchNo'
+    })
+
     // 数据库首次创建时注入种子数据（图片在 open 后异步补充）
     this.on('populate', (transaction) => {
       const now = Date.now()
