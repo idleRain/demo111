@@ -1,0 +1,16 @@
+name: build
+displayName: 构建静态页面
+triggers:
+  push:
+    - matchBranches:
+      - master
+steps:
+  - step: bun@1
+    name: install-and-build
+    commands: |
+      bun install
+      bun run generate
+  - step: publish@release-artifacts
+    name: publish
+    with:
+      publishPath: .output/public
