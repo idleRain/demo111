@@ -20,12 +20,18 @@ export default defineNuxtConfig({
     }
   },
 
-  // Element Plus 模块配置，按需引入组件
-  modules: ['@element-plus/nuxt'],
+  // Element Plus + TailwindCSS 模块
+  modules: ['@element-plus/nuxt', '@nuxtjs/tailwindcss'],
 
   elementPlus: {
     importStyle: 'scss',
     themes: ['dark']
+  },
+
+  // TailwindCSS 入口文件（仅 components + utilities，不含 preflight 避免与 Element Plus 冲突）
+  tailwindcss: {
+    cssPath: '~/assets/css/tailwind.css',
+    configPath: 'tailwind.config.ts',
   },
 
   css: [

@@ -1,0 +1,3 @@
+/* TailwindCSS 入口 - 仅引入工具层，不引入 base/preflight 避免与 Element Plus 冲突 */
+@tailwind components;
+@tailwind utilities;

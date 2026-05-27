@@ -9,12 +9,24 @@ definePageMeta({
   layout: 'blank'
 })
 
-onMounted(() => {
-  const authToken = useCookie('auth_token')
-  if (authToken.value) {
-    navigateTo('/dashboard', { replace: true })
+// 使用 useAuth 的 isLoggedIn（基于 Cookie），SSR 时也能正确判断
+const { isLoggedIn } = useAuth()
+
+if (import.meta.server) {
+  // SSR 时直接服务端重定向，避免页面闪烁
+  if (isLoggedIn.value) {
+    navigateTo('/dashboard', { redirectCode: 302 })
   } else {
-    navigateTo('/login', { replace: true })
+    navigateTo('/login', { redirectCode: 302 })
   }
-})
+} else {
+  // 客户端也做一次兜底
+  onMounted(() => {
+    if (isLoggedIn.value) {
+      navigateTo('/dashboard', { replace: true })
+    } else {
+      navigateTo('/login', { replace: true })
+    }
+  })
+}
 </script>
