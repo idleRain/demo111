@@ -57,6 +57,33 @@ export interface OperationLog {
   createdAt: number
 }
 
+/** 库存分类表 - 对物料进行分门别类管理 */
+export interface InventoryCategory {
+  id?: number
+  name: string           // 分类名称，如"原材料"、"半成品"、"成品"、"辅料"
+  code: string           // 分类编码，如"RAW"、"SEMI"、"FINISHED"、"AUX"
+  parentId?: number      // 父级分类ID，支持多级分类树
+  sort: number           // 排序权重，越小越靠前
+  remark: string         // 分类备注
+  createdAt: number
+  updatedAt: number
+}
+
+/** 库存表 - 记录物料在仓库中的实时存量 */
+export interface Inventory {
+  id?: number
+  productId: number      // 关联产品ID
+  categoryId: number     // 关联分类ID
+  quantity: number       // 当前库存数量
+  unit: string           // 计量单位，如"个"、"件"、"kg"、"箱"
+  warehouse: string      // 仓库名称/库位，如"A区-01架"
+  safetyStock: number    // 安全库存量，低于此值触发预警
+  batchNo?: string       // 批次号，支持批次追溯
+  remark: string         // 库存备注
+  createdAt: number
+  updatedAt: number
+}
+
 // ==================== 数据库类 ====================
 
 class ErpDatabase extends Dexie {
@@ -64,17 +91,28 @@ class ErpDatabase extends Dexie {
   products!: Table<Product, number>
   workOrders!: Table<WorkOrder, number>
   operationLogs!: Table<OperationLog, number>
+  inventoryCategories!: Table<InventoryCategory, number>
+  inventories!: Table<Inventory, number>
 
   constructor() {
     super('MinimalErpDB')
 
-    // 定义数据库版本和表结构
-    // ++id 表示自增主键，后续字段为索引
+    // V1: 初始版本（users / products / workOrders / operationLogs）
     this.version(1).stores({
       users: '++id, username, role',
       products: '++id, code, name',
       workOrders: '++id, orderNo, productId, status, assignee',
       operationLogs: '++id, workOrderId'
+    })
+
+    // V2: 新增库存分类表和库存表
+    this.version(2).stores({
+      users: '++id, username, role',
+      products: '++id, code, name',
+      workOrders: '++id, orderNo, productId, status, assignee',
+      operationLogs: '++id, workOrderId',
+      inventoryCategories: '++id, code, name, parentId',
+      inventories: '++id, productId, categoryId, warehouse, batchNo'
     })
 
     // 数据库首次创建时注入种子数据（图片在 open 后异步补充）
@@ -131,6 +169,26 @@ class ErpDatabase extends Dexie {
           createdAt: now, updatedAt: now
         }
       ])
+
+      // 注入库存分类种子数据（两级分类结构）
+      const categoriesTable = transaction.table('inventoryCategories')
+      categoriesTable.bulkAdd([
+        { name: '原材料', code: 'RAW', sort: 1, remark: '生产用原材料', createdAt: now, updatedAt: now },
+        { name: '半成品', code: 'SEMI', sort: 2, remark: '加工中的半成品', createdAt: now, updatedAt: now },
+        { name: '成品', code: 'FINISHED', sort: 3, remark: '完工产成品', createdAt: now, updatedAt: now },
+        { name: '辅料', code: 'AUX', sort: 4, remark: '辅助材料', createdAt: now, updatedAt: now },
+        { name: '包装材料', code: 'PKG', sort: 5, remark: '包装用材料', createdAt: now, updatedAt: now }
+      ])
+
+      // 注入库存种子数据（关联产品和分类）
+      const inventoriesTable = transaction.table('inventories')
+      inventoriesTable.bulkAdd([
+        { productId: 1, categoryId: 1, quantity: 500, unit: '个', warehouse: 'A区-01架', safetyStock: 100, batchNo: 'B20260501', remark: '常规库存', createdAt: now, updatedAt: now },
+        { productId: 2, categoryId: 2, quantity: 200, unit: '件', warehouse: 'A区-02架', safetyStock: 50, batchNo: 'B20260502', remark: '待组装', createdAt: now, updatedAt: now },
+        { productId: 3, categoryId: 4, quantity: 1000, unit: '片', warehouse: 'B区-01架', safetyStock: 200, batchNo: 'B20260503', remark: '辅料区存放', createdAt: now, updatedAt: now },
+        { productId: 4, categoryId: 1, quantity: 30, unit: '块', warehouse: 'C区-电子仓', safetyStock: 50, batchNo: 'B20260504', remark: '⚠️低于安全库存', createdAt: now, updatedAt: now },
+        { productId: 5, categoryId: 3, quantity: 150, unit: '个', warehouse: 'A区-03架', safetyStock: 30, batchNo: 'B20260505', remark: '成品区', createdAt: now, updatedAt: now }
+      ])
     })
   }
 
@@ -138,7 +196,6 @@ class ErpDatabase extends Dexie {
   async initProductImages() {
     const products = await this.products.toArray()
     if (products.length > 0 && !products[0].image) {
-      // 通过 Vite 静态资源 import 获取图片 URL，再 fetch 为 Blob
       const imageUrls = [
         import('~/assets/images/P-001.png'),
         import('~/assets/images/P-002.png'),

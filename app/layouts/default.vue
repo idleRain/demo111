@@ -85,6 +85,7 @@ import {
   DataBoard,
   Goods,
   Document,
+  Box,
   Setting,
   Fold,
   Expand,
@@ -103,6 +104,7 @@ const menuItems = [
   { path: '/dashboard', label: '数据大屏', icon: DataBoard },
   { path: '/products', label: '产品管理', icon: Goods },
   { path: '/work-orders', label: '工单管理', icon: Document },
+  { path: '/inventory', label: '库存管理', icon: Box },
   { path: '/settings', label: '系统设置', icon: Setting }
 ]
 
@@ -112,6 +114,7 @@ const pageTitleMap: Record<string, string> = {
   '/products': '产品管理',
   '/products/add': '新增产品',
   '/work-orders': '工单管理',
+  '/inventory': '库存管理',
   '/settings': '系统设置'
 }
 
